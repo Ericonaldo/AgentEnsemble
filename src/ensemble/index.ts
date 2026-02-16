@@ -74,12 +74,18 @@ export class EnsembleEngine {
       results = await this.executeSequential(selectedAdapters, task, timeout);
     }
 
-    // Synthesize results
-    const synthesis = await synthesize(
-      this.client,
-      { task, results, strategy: synthesisStrategy },
-      this.config
-    );
+    // Synthesize results (if provider available)
+    let synthesis: string;
+    if (this.client.isAvailable()) {
+      synthesis = await synthesize(
+        this.client,
+        { task, results, strategy: synthesisStrategy },
+        this.config
+      );
+    } else {
+      // No synthesis available, format results directly
+      synthesis = this.formatResultsWithoutSynthesis(results);
+    }
 
     return {
       results,
@@ -162,6 +168,34 @@ export class EnsembleEngine {
   }
 
   /**
+   * Format results without LLM synthesis (fallback when no provider available)
+   */
+  private formatResultsWithoutSynthesis(results: AgentResult[]): string {
+    const comparison = compareResults(results);
+    const lines: string[] = [
+      '## Agent Results (No synthesis - API key or CLI not available)',
+      '',
+    ];
+
+    for (const result of results) {
+      const status = result.exitCode === 0 ? 'SUCCESS' : `FAILED (exit ${result.exitCode})`;
+      lines.push(`### ${result.agent} [${status}] (${result.duration}ms)`);
+      lines.push('');
+      lines.push(result.output || result.error || '(no output)');
+      lines.push('');
+      lines.push('---');
+      lines.push('');
+    }
+
+    lines.push('## Summary');
+    lines.push(`- All succeeded: ${comparison.allSucceeded ? 'Yes' : 'No'}`);
+    lines.push(`- Agreement level: ${comparison.agreementLevel}`);
+    lines.push(`- Fastest agent: ${comparison.fastestAgent}`);
+
+    return lines.join('\n');
+  }
+
+  /**
    * Stream ensemble execution with progress
    */
   async *executeWithProgress(options: EnsembleOptions): AsyncGenerator<{
@@ -211,14 +245,18 @@ export class EnsembleEngine {
 
     yield { type: 'synthesizing' };
 
-    // Stream synthesis
+    // Stream synthesis (or format without synthesis if provider unavailable)
     let synthesis = '';
-    for await (const chunk of streamSynthesize(
-      this.client,
-      { task, results, strategy: synthesisStrategy },
-      this.config
-    )) {
-      synthesis += chunk;
+    if (this.client.isAvailable()) {
+      for await (const chunk of streamSynthesize(
+        this.client,
+        { task, results, strategy: synthesisStrategy },
+        this.config
+      )) {
+        synthesis += chunk;
+      }
+    } else {
+      synthesis = this.formatResultsWithoutSynthesis(results);
     }
 
     const final: EnsembleResult = {

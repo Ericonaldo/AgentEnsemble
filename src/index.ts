@@ -10,7 +10,7 @@ import chalk from 'chalk';
 import type { AEConfig, AECommand, AgentType } from './types.js';
 import { loadConfig, applyOverrides } from './config/index.js';
 import { PTYProxy } from './proxy/index.js';
-import { createClient } from './models/index.js';
+import { createClientAsync, LLMClient } from './models/index.js';
 import { EnsembleEngine } from './ensemble/index.js';
 import { injectBridge, cleanupBridge, getBridgeStatus } from './bridge/index.js';
 import { createStatusBar, renderEnsembleResult, renderProgress } from './ui/index.js';
@@ -42,10 +42,24 @@ class AgentEnsemble {
     }
 
     // Initialize components
-    const client = createClient({
+    const client = await createClientAsync({
       model: this.config.models[this.config.general.costMode].synthesis,
       debug: this.config.general.debug,
+      synthesisProvider: this.config.ensemble.synthesisProvider,
     });
+
+    if (this.config.general.debug) {
+      console.error(chalk.gray(`[ae] Synthesis provider: ${client.getProvider()}`));
+    }
+
+    // Warn if no synthesis provider is available
+    if (!client.isAvailable()) {
+      console.log(chalk.yellow('[ae] Note: No synthesis provider available.'));
+      console.log(chalk.yellow('     Ensemble results will be shown without AI synthesis.'));
+      console.log(chalk.yellow('     To enable synthesis, either:'));
+      console.log(chalk.yellow('     - Set ANTHROPIC_API_KEY environment variable, or'));
+      console.log(chalk.yellow('     - Ensure Claude Code CLI is installed (used as fallback)'));
+    }
 
     this.proxy = new PTYProxy(this.config);
     this.ensemble = new EnsembleEngine(this.config, client);
@@ -92,17 +106,22 @@ class AgentEnsemble {
 
     // Inject bridge content if configured
     if (this.config.bridge.autoInject) {
-      const client = createClient({
+      const bridgeClient = await createClientAsync({
         model: this.config.models[this.config.general.costMode].synthesis,
         debug: this.config.general.debug,
+        synthesisProvider: this.config.ensemble.synthesisProvider,
       });
-      const injected = await injectBridge(this.config, client);
+      const injected = await injectBridge(this.config, bridgeClient);
       if (injected.length > 0 && this.config.general.debug) {
         console.error(chalk.gray(`[ae] Bridge injected into: ${injected.join(', ')}`));
       }
     }
 
-    // Start status bar
+    // Start the PTY proxy first (may fail if agent not installed)
+    await this.proxy.start();
+    this.isRunning = true;
+
+    // Start status bar only after PTY is running
     this.statusBar.update({
       agent: this.config.general.defaultAgent,
       status: 'idle',
@@ -110,10 +129,6 @@ class AgentEnsemble {
       bridgeActive: true,
     });
     this.statusBar.startRefresh();
-
-    // Start the PTY proxy
-    await this.proxy.start();
-    this.isRunning = true;
 
     // Set up stdin handling
     process.stdin.setRawMode(true);
@@ -287,6 +302,7 @@ class AgentEnsemble {
     console.log('Ensemble:');
     console.log(`  Strategy: ${this.config.ensemble.strategy}`);
     console.log(`  Timeout: ${this.config.ensemble.timeout}s`);
+    console.log(`  Synthesis Provider: ${this.config.ensemble.synthesisProvider}`);
     console.log('');
     console.log('Models:');
     const preset = this.config.models[this.config.general.costMode];
@@ -314,11 +330,21 @@ program
   .version(VERSION)
   .option('-a, --agent <type>', 'default agent (claude-code or codex)')
   .option('-c, --cost-mode <mode>', 'cost mode (cheap, balanced, or quality)')
+  .option('-s, --synthesis-provider <provider>', 'synthesis provider (auto, sdk, cli, or none)')
   .option('-d, --debug', 'enable debug logging')
   .action(async (options) => {
-    const ae = new AgentEnsemble();
-    await ae.init(options);
-    await ae.start();
+    try {
+      const ae = new AgentEnsemble();
+      await ae.init(options);
+      await ae.start();
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(chalk.red(`Error: ${error.message}`));
+      } else {
+        console.error(chalk.red('An unexpected error occurred'));
+      }
+      process.exit(1);
+    }
   });
 
 // Parse CLI arguments

@@ -3,11 +3,31 @@
  * Main proxy module that wraps the child agent
  */
 
-import { spawn, IPty } from 'node-pty';
+import { spawn as ptySpawn, IPty } from 'node-pty';
+import { spawn as cpSpawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import type { AEConfig, AgentType, ProxyState, AECommand } from '../types.js';
 import { InputInterceptor } from './interceptor.js';
 import { OutputMonitor } from './monitor.js';
+
+/**
+ * Check if a command exists in PATH
+ */
+async function commandExists(command: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    // Use 'which' on Unix, 'where' on Windows
+    const checkCmd = process.platform === 'win32' ? 'where' : 'which';
+    const proc = cpSpawn(checkCmd, [command], { stdio: ['ignore', 'pipe', 'pipe'] });
+
+    proc.on('close', (code) => {
+      resolve(code === 0);
+    });
+
+    proc.on('error', () => {
+      resolve(false);
+    });
+  });
+}
 
 /**
  * PTY Proxy that wraps a child agent process
@@ -64,6 +84,19 @@ export class PTYProxy extends EventEmitter {
       throw new Error(`Agent ${agent} is not enabled`);
     }
 
+    // Build the command
+    const command = agentConfig.command;
+
+    // Check if command exists before trying to spawn
+    const exists = await commandExists(command);
+    if (!exists) {
+      throw new Error(
+        `Command '${command}' not found. Please ensure ${agent} is installed and in your PATH.\n` +
+        `  - For Claude Code: https://docs.anthropic.com/en/docs/claude-code\n` +
+        `  - For Codex: https://github.com/openai/codex`
+      );
+    }
+
     this.state.agentType = agent;
     this.state.agentStatus = 'running';
 
@@ -71,23 +104,29 @@ export class PTYProxy extends EventEmitter {
     const cols = process.stdout.columns || 80;
     const rows = process.stdout.rows || 24;
 
-    // Build the command
-    const command = agentConfig.command;
     const args: string[] = [];
 
     // Spawn the PTY
-    this.pty = spawn(command, args, {
-      name: 'xterm-256color',
-      cols,
-      rows,
-      cwd: process.cwd(),
-      env: {
-        ...process.env,
-        TERM: 'xterm-256color',
-        AE_ACTIVE: '1',
-        AE_AGENT: agent,
-      },
-    });
+    try {
+      this.pty = ptySpawn(command, args, {
+        name: 'xterm-256color',
+        cols,
+        rows,
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          TERM: 'xterm-256color',
+          AE_ACTIVE: '1',
+          AE_AGENT: agent,
+        },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(
+        `Failed to spawn '${command}': ${message}\n` +
+        `Please ensure ${agent} is properly installed and executable.`
+      );
+    }
 
     this.isRunning = true;
 

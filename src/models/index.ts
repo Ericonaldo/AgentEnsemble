@@ -72,5 +72,5 @@ export class ModelManager {
   }
 }
 
-export { LLMClient, createClient } from './client.js';
+export { LLMClient, createClient, createClientAsync, hasApiKey, hasClaudeCli, resolveProvider } from './client.js';
 export { MODEL_PRESETS, MODELS, getModelInfo, getPreset, estimateCost } from './presets.js';

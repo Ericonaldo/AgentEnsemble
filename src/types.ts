@@ -11,6 +11,9 @@ export type CostMode = 'cheap' | 'balanced' | 'quality';
 // Ensemble strategy
 export type EnsembleStrategy = 'parallel' | 'sequential';
 
+// Synthesis provider
+export type SynthesisProvider = 'auto' | 'sdk' | 'cli' | 'none';
+
 // UI theme
 export type UITheme = 'default' | 'minimal' | 'verbose';
 
@@ -52,6 +55,7 @@ export interface AEConfig {
     strategy: EnsembleStrategy;
     timeout: number;
     synthesisModel: string;
+    synthesisProvider: SynthesisProvider;
   };
   bridge: {
     targetFiles: string[];
@@ -85,6 +89,7 @@ export interface RawTOMLConfig {
     strategy?: string;
     timeout?: number;
     synthesis_model?: string;
+    synthesis_provider?: string;
   };
   bridge?: {
     target_files?: string[];

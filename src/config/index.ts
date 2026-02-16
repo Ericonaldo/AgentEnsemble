@@ -7,7 +7,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import * as TOML from '@iarna/toml';
-import type { AEConfig, RawTOMLConfig } from '../types.js';
+import type { AEConfig, RawTOMLConfig, SynthesisProvider } from '../types.js';
 import { DEFAULT_CONFIG } from './defaults.js';
 import { validateConfig } from './schema.js';
 
@@ -80,6 +80,8 @@ export async function loadConfig(cwd: string = process.cwd()): Promise<AEConfig>
   }
 }
 
+const VALID_SYNTHESIS_PROVIDERS: SynthesisProvider[] = ['auto', 'sdk', 'cli', 'none'];
+
 /**
  * Get config with CLI overrides
  */
@@ -89,6 +91,7 @@ export function applyOverrides(
     agent: string;
     costMode: string;
     debug: boolean;
+    synthesisProvider: string;
   }>
 ): AEConfig {
   const result = structuredClone(config);
@@ -107,6 +110,12 @@ export function applyOverrides(
 
   if (overrides.debug !== undefined) {
     result.general.debug = overrides.debug;
+  }
+
+  if (overrides.synthesisProvider) {
+    if (VALID_SYNTHESIS_PROVIDERS.includes(overrides.synthesisProvider as SynthesisProvider)) {
+      result.ensemble.synthesisProvider = overrides.synthesisProvider as SynthesisProvider;
+    }
   }
 
   return result;

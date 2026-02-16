@@ -18,6 +18,14 @@ git clone git@github.com:Ericonaldo/AgentEnsemble.git
 cd AgentEnsemble
 npm install
 npm run build
+npm link  # Makes 'ae' command available globally
+```
+
+Alternative ways to run:
+```bash
+node dist/index.js        # Run directly
+npm start                 # Via npm script
+npx agent-ensemble        # Via npx (after npm link or global install)
 ```
 
 ## Usage
@@ -33,6 +41,12 @@ ae --agent codex
 ae --cost-mode quality  # Uses Opus
 ae --cost-mode balanced # Uses Sonnet (default)
 ae --cost-mode cheap    # Uses Haiku
+
+# Set synthesis provider for ensemble
+ae --synthesis-provider auto  # Auto-detect (default): SDK if API key, else CLI
+ae --synthesis-provider sdk   # Use Anthropic SDK (requires ANTHROPIC_API_KEY)
+ae --synthesis-provider cli   # Use Claude CLI (works with account-based auth)
+ae --synthesis-provider none  # Disable synthesis, show raw results only
 
 # Enable debug logging
 ae --debug
@@ -72,6 +86,7 @@ enabled = true
 [ensemble]
 strategy = "parallel"
 timeout = 300
+synthesis_provider = "auto"  # auto, sdk, cli, or none
 
 [bridge]
 target_files = ["CLAUDE.md", "AGENTS.md"]
@@ -127,7 +142,19 @@ src/
 
 - Node.js 18+
 - Claude Code (`claude` CLI) and/or Codex (`codex` CLI) installed
-- `ANTHROPIC_API_KEY` environment variable for ensemble synthesis
+
+### Ensemble Synthesis
+
+For AI-powered synthesis of ensemble results, one of the following is needed:
+
+| Provider | Requirement | Auth Method |
+|----------|-------------|-------------|
+| `sdk` | `ANTHROPIC_API_KEY` env var | API key |
+| `cli` | Claude Code CLI installed | Account-based (subscription) |
+| `auto` | Either of the above | Auto-detected |
+| `none` | Nothing | Shows raw results without synthesis |
+
+If you have Claude Code installed via subscription (no API key), the tool will automatically use `claude --print` for synthesis.
 
 ## License
 

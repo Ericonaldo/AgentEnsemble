@@ -26,6 +26,7 @@ export const DEFAULT_CONFIG: AEConfig = {
     strategy: 'parallel',
     timeout: 300,
     synthesisModel: 'claude-sonnet-4-5-20250929',
+    synthesisProvider: 'auto',
   },
   bridge: {
     targetFiles: ['CLAUDE.md', 'AGENTS.md'],

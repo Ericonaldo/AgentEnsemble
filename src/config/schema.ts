@@ -2,13 +2,14 @@
  * Configuration validation for AgentEnsemble
  */
 
-import type { AEConfig, AgentType, CostMode, EnsembleStrategy, UITheme, RawTOMLConfig } from '../types.js';
+import type { AEConfig, AgentType, CostMode, EnsembleStrategy, UITheme, SynthesisProvider, RawTOMLConfig } from '../types.js';
 import { DEFAULT_CONFIG } from './defaults.js';
 
 const VALID_AGENT_TYPES: AgentType[] = ['claude-code', 'codex'];
 const VALID_COST_MODES: CostMode[] = ['cheap', 'balanced', 'quality'];
 const VALID_STRATEGIES: EnsembleStrategy[] = ['parallel', 'sequential'];
 const VALID_THEMES: UITheme[] = ['default', 'minimal', 'verbose'];
+const VALID_SYNTHESIS_PROVIDERS: SynthesisProvider[] = ['auto', 'sdk', 'cli', 'none'];
 
 /**
  * Validation error
@@ -70,6 +71,19 @@ function validateTheme(value: unknown, path: string): UITheme {
     );
   }
   return value as UITheme;
+}
+
+/**
+ * Validate synthesis provider
+ */
+function validateSynthesisProvider(value: unknown, path: string): SynthesisProvider {
+  if (typeof value !== 'string' || !VALID_SYNTHESIS_PROVIDERS.includes(value as SynthesisProvider)) {
+    throw new ConfigValidationError(
+      `must be one of: ${VALID_SYNTHESIS_PROVIDERS.join(', ')}`,
+      path
+    );
+  }
+  return value as SynthesisProvider;
 }
 
 /**
@@ -145,6 +159,12 @@ export function validateConfig(raw: RawTOMLConfig): AEConfig {
         throw new ConfigValidationError('must be a string', 'ensemble.synthesis_model');
       }
       config.ensemble.synthesisModel = raw.ensemble.synthesis_model;
+    }
+    if (raw.ensemble.synthesis_provider !== undefined) {
+      config.ensemble.synthesisProvider = validateSynthesisProvider(
+        raw.ensemble.synthesis_provider,
+        'ensemble.synthesis_provider'
+      );
     }
   }
 
