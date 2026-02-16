@@ -209,6 +209,16 @@ export class LLMClient {
 
       let stdout = '';
       let stderr = '';
+      let settled = false;
+
+      // Timeout after 5 minutes
+      const timeoutId = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          proc.kill();
+          reject(new Error('claude CLI timed out'));
+        }
+      }, 300000);
 
       proc.stdout.on('data', (data) => {
         stdout += data.toString();
@@ -219,6 +229,10 @@ export class LLMClient {
       });
 
       proc.on('close', (code) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+
         if (code === 0) {
           if (this.debug) {
             console.error(`[LLMClient] CLI: Received ${stdout.length} chars`);
@@ -230,14 +244,11 @@ export class LLMClient {
       });
 
       proc.on('error', (err) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
         reject(new Error(`Failed to spawn claude CLI: ${err.message}`));
       });
-
-      // Timeout after 5 minutes
-      setTimeout(() => {
-        proc.kill();
-        reject(new Error('claude CLI timed out'));
-      }, 300000);
     });
   }
 

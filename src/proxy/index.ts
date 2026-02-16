@@ -11,7 +11,7 @@ import { InputInterceptor } from './interceptor.js';
 import { OutputMonitor } from './monitor.js';
 
 /**
- * Check if a command exists in PATH
+ * Check if a command exists in PATH (with timeout)
  */
 async function commandExists(command: string): Promise<boolean> {
   return new Promise((resolve) => {
@@ -19,11 +19,28 @@ async function commandExists(command: string): Promise<boolean> {
     const checkCmd = process.platform === 'win32' ? 'where' : 'which';
     const proc = cpSpawn(checkCmd, [command], { stdio: ['ignore', 'pipe', 'pipe'] });
 
+    let settled = false;
+
+    // Timeout after 5 seconds
+    const timeoutId = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        proc.kill();
+        resolve(false);
+      }
+    }, 5000);
+
     proc.on('close', (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
       resolve(code === 0);
     });
 
     proc.on('error', () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
       resolve(false);
     });
   });
