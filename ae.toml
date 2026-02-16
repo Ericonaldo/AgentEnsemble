@@ -1,0 +1,70 @@
+# AgentEnsemble Configuration
+# This file configures the ae CLI tool
+
+[general]
+# Default agent to use when starting ae
+default_agent = "claude-code"
+
+# Cost mode: "cheap", "balanced", or "quality"
+cost_mode = "balanced"
+
+# Enable debug logging
+debug = false
+
+[agents]
+# Claude Code configuration
+[agents.claude-code]
+command = "claude"
+print_flag = "--print"
+enabled = true
+
+# Codex configuration
+[agents.codex]
+command = "codex"
+quiet_flag = "--quiet"
+enabled = true
+
+[ensemble]
+# Default ensemble strategy: "parallel" or "sequential"
+strategy = "parallel"
+
+# Timeout for ensemble operations (in seconds)
+timeout = 300
+
+# Model to use for synthesis
+synthesis_model = "claude-sonnet-4-5-20250929"
+
+[bridge]
+# Files to scan for configuration bridging
+target_files = ["CLAUDE.md", "AGENTS.md"]
+
+# Auto-inject bridge content on startup
+auto_inject = true
+
+# Clean up bridge content on exit
+auto_cleanup = true
+
+[ui]
+# Show status bar at top of terminal
+status_bar = true
+
+# Status bar refresh interval (in milliseconds)
+status_bar_refresh = 1000
+
+# Theme: "default", "minimal", or "verbose"
+theme = "default"
+
+[models]
+# Model presets for different cost modes
+
+[models.cheap]
+primary = "claude-haiku-4-5-20251001"
+synthesis = "claude-haiku-4-5-20251001"
+
+[models.balanced]
+primary = "claude-sonnet-4-5-20250929"
+synthesis = "claude-sonnet-4-5-20250929"
+
+[models.quality]
+primary = "claude-opus-4-5-20251101"
+synthesis = "claude-opus-4-5-20251101"
