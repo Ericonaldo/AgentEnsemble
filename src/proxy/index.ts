@@ -110,7 +110,8 @@ export class PTYProxy extends EventEmitter {
       throw new Error(
         `Command '${command}' not found. Please ensure ${agent} is installed and in your PATH.\n` +
         `  - For Claude Code: https://docs.anthropic.com/en/docs/claude-code\n` +
-        `  - For Codex: https://github.com/openai/codex`
+        `  - For Codex: https://github.com/openai/codex\n` +
+        `  - For Gemini CLI: https://github.com/google-gemini/gemini-cli`
       );
     }
 

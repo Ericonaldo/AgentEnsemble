@@ -97,7 +97,7 @@ export function applyOverrides(
   const result = structuredClone(config);
 
   if (overrides.agent) {
-    if (overrides.agent === 'claude-code' || overrides.agent === 'codex') {
+    if (overrides.agent === 'claude-code' || overrides.agent === 'codex' || overrides.agent === 'gemini') {
       result.general.defaultAgent = overrides.agent;
     }
   }
