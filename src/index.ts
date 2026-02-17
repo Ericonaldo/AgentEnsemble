@@ -328,7 +328,7 @@ program
   .name('ae')
   .description('AgentEnsemble - AI agent orchestration layer')
   .version(VERSION)
-  .option('-a, --agent <type>', 'default agent (claude-code or codex)')
+  .option('-a, --agent <type>', 'default agent (claude-code, codex, or gemini)')
   .option('-c, --cost-mode <mode>', 'cost mode (cheap, balanced, or quality)')
   .option('-s, --synthesis-provider <provider>', 'synthesis provider (auto, sdk, cli, or none)')
   .option('-d, --debug', 'enable debug logging')
