@@ -12,6 +12,7 @@
     "start": "node dist/index.js",
     "test": "node --test dist/**/*.test.js",
     "clean": "rm -rf dist",
+    "postinstall": "chmod +x node_modules/node-pty/prebuilds/*/spawn-helper 2>/dev/null || true",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

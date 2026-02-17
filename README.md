@@ -213,6 +213,12 @@ ae --debug
 ### "Command 'claude' not found"
 Install Claude Code: https://docs.anthropic.com/en/docs/claude-code
 
+### "posix_spawnp failed"
+Fix node-pty permissions:
+```bash
+chmod +x node_modules/node-pty/prebuilds/*/spawn-helper
+```
+
 ### "No synthesis provider available"
 Either:
 - Set `ANTHROPIC_API_KEY` environment variable, or

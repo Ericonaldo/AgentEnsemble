@@ -72,12 +72,20 @@ enabled = false
 
 ### "posix_spawnp failed"
 
-The agent command exists but can't be executed.
+The node-pty spawn-helper binary lacks execute permissions.
 
-**Solutions:**
-- Check file permissions: `ls -la $(which claude)`
-- Try running agent directly: `claude --version`
-- Reinstall the agent
+**Solution:**
+```bash
+chmod +x node_modules/node-pty/prebuilds/*/spawn-helper
+```
+
+Or reinstall:
+```bash
+npm rebuild node-pty
+chmod +x node_modules/node-pty/prebuilds/*/spawn-helper
+```
+
+This is fixed automatically in newer versions via the postinstall script.
 
 ## Synthesis Issues
 
