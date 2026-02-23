@@ -21,6 +21,11 @@ export const DEFAULT_CONFIG: AEConfig = {
       quietFlag: '--quiet',
       enabled: true,
     },
+    'gemini': {
+      command: 'gemini',
+      promptFlag: '-p',
+      enabled: true,
+    },
   },
   ensemble: {
     strategy: 'parallel',
@@ -29,7 +34,7 @@ export const DEFAULT_CONFIG: AEConfig = {
     synthesisProvider: 'auto',
   },
   bridge: {
-    targetFiles: ['CLAUDE.md', 'AGENTS.md'],
+    targetFiles: ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md'],
     autoInject: true,
     autoCleanup: true,
   },

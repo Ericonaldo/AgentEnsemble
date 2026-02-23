@@ -5,7 +5,7 @@
 import type { AEConfig, AgentType, CostMode, EnsembleStrategy, UITheme, SynthesisProvider, RawTOMLConfig } from '../types.js';
 import { DEFAULT_CONFIG } from './defaults.js';
 
-const VALID_AGENT_TYPES: AgentType[] = ['claude-code', 'codex'];
+const VALID_AGENT_TYPES: AgentType[] = ['claude-code', 'codex', 'gemini'];
 const VALID_COST_MODES: CostMode[] = ['cheap', 'balanced', 'quality'];
 const VALID_STRATEGIES: EnsembleStrategy[] = ['parallel', 'sequential'];
 const VALID_THEMES: UITheme[] = ['default', 'minimal', 'verbose'];
@@ -130,6 +130,9 @@ export function validateConfig(raw: RawTOMLConfig): AEConfig {
       }
       if (agentRaw.quiet_flag !== undefined) {
         config.agents[agentType].quietFlag = agentRaw.quiet_flag;
+      }
+      if (agentRaw.prompt_flag !== undefined) {
+        config.agents[agentType].promptFlag = agentRaw.prompt_flag;
       }
       if (agentRaw.enabled !== undefined) {
         if (typeof agentRaw.enabled !== 'boolean') {

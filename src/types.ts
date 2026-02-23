@@ -3,7 +3,7 @@
  */
 
 // Agent types supported by ae
-export type AgentType = 'claude-code' | 'codex';
+export type AgentType = 'claude-code' | 'codex' | 'gemini';
 
 // Cost mode presets
 export type CostMode = 'cheap' | 'balanced' | 'quality';
@@ -30,6 +30,7 @@ export interface AgentConfig {
   command: string;
   printFlag?: string;
   quietFlag?: string;
+  promptFlag?: string;
   enabled: boolean;
 }
 
@@ -83,6 +84,7 @@ export interface RawTOMLConfig {
     command?: string;
     print_flag?: string;
     quiet_flag?: string;
+    prompt_flag?: string;
     enabled?: boolean;
   }>;
   ensemble?: {

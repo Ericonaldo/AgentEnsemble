@@ -5,10 +5,12 @@
 import type { AgentType, AgentConfig, IAgentAdapter, AEConfig } from '../types.js';
 import { ClaudeCodeAdapter, createClaudeCodeAdapter } from './claude-code.js';
 import { CodexAdapter, createCodexAdapter } from './codex.js';
+import { GeminiAdapter, createGeminiAdapter } from './gemini.js';
 
 export { BaseAdapter } from './base.js';
 export { ClaudeCodeAdapter, createClaudeCodeAdapter } from './claude-code.js';
 export { CodexAdapter, createCodexAdapter } from './codex.js';
+export { GeminiAdapter, createGeminiAdapter } from './gemini.js';
 
 /**
  * Create an adapter for the specified agent type
@@ -23,6 +25,8 @@ export function createAdapter(
       return new ClaudeCodeAdapter(config, debug);
     case 'codex':
       return new CodexAdapter(config, debug);
+    case 'gemini':
+      return new GeminiAdapter(config, debug);
     default:
       throw new Error(`Unknown agent type: ${type}`);
   }
